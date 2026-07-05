@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proctored Assessment Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ SCREEN 1: INTRO / INSTRUCTIONS ============ -->
+<section id="screen-intro" class="screen active">
+  <div class="card intro-card">
+    <span class="badge">Proctored Assessment</span>
+    <h1>Before you begin</h1>
+    <p class="sub">This test simulates the same monitored experience your students will get. Please read the rules carefully.</p>
+
+    <ul class="rules">
+      <li>
+        <span class="rule-icon">🎥</span>
+        <div>
+          <strong>Webcam monitoring</strong>
+          <p>Your camera stays on for the full duration of the test.</p>
+        </div>
+      </li>
+      <li>
+        <span class="rule-icon">🖥️</span>
+        <div>
+          <strong>Fullscreen required</strong>
+          <p>The test runs in fullscreen mode. Exiting fullscreen will be flagged.</p>
+        </div>
+      </li>
+      <li>
+        <span class="rule-icon">🚫</span>
+        <div>
+          <strong>Tab switching is detected</strong>
+          <p>Switching tabs or minimizing the window logs a violation.</p>
+        </div>
+      </li>
+      <li>
+        <span class="rule-icon">⏱️</span>
+        <div>
+          <strong>50 seconds per question</strong>
+          <p>Each question auto-submits when the timer runs out.</p>
+        </div>
+      </li>
+    </ul>
+
+    <button id="btn-start" class="btn btn-primary">Start Test</button>
+    <p id="permission-note" class="permission-note"></p>
+  </div>
+</section>
+
+<!-- ============ SCREEN 2: TEST IN PROGRESS ============ -->
+<section id="screen-test" class="screen">
+  <div class="test-topbar">
+    <div class="topbar-left">
+      <span class="q-progress" id="q-progress">Question 1 of 5</span>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="proctor-status" id="proctor-status">
+        <span class="dot dot-live"></span> Monitoring active
+      </div>
+      <div class="timer" id="timer">0:50</div>
+    </div>
+  </div>
+
+  <div id="violation-banner" class="violation-banner hidden">
+    ⚠️ Violation detected — <span id="violation-text"></span>
+  </div>
+
+  <div class="test-body">
+    <div class="webcam-box">
+      <video id="webcam-feed" autoplay muted playsinline></video>
+      <span class="webcam-label">You (live)</span>
+    </div>
+
+    <div class="question-card">
+      <h2 id="question-text">Loading question...</h2>
+      <div id="options-list" class="options-list"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCREEN 3: RESULTS ============ -->
+<section id="screen-results" class="screen">
+  <div class="card results-card">
+    <span class="badge badge-success">Test Complete</span>
+    <h1>Your Results</h1>
+
+    <div class="score-row">
+      <div class="score-circle">
+        <span id="score-value">0/5</span>
+      </div>
+      <div class="score-meta">
+        <p><strong id="score-percent">0%</strong> score</p>
+        <p id="violation-summary">No violations detected</p>
+      </div>
+    </div>
+
+    <h3 class="review-heading">Answer Review</h3>
+    <div id="review-list" class="review-list"></div>
+
+    <button id="btn-retake" class="btn btn-primary">Retake Test</button>
+  </div>
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>
