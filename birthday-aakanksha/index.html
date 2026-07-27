@@ -134,9 +134,19 @@
 
   /* ---------------- gallery: scrapbook paper ---------------- */
   .gallery-section{
-    .feature-photo{
+    background:transparent;
+  }
+  .gallery-title{ text-align:center; margin-bottom:3rem; }
+  .gallery-title h2{ font-style:italic; color:#FFFFFF; }
+  .gallery{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(210px,1fr));
+    gap:2.6rem 2.2rem;
+    padding-top:1rem;
+  }
+  .feature-photo{
     max-width:700px;
-    margin:3rem auto 0;
+    margin:3.5rem auto 0;
     text-align:center;
   }
   .feature-photo .frame{
@@ -160,16 +170,6 @@
     font-style:italic;
     color:#FFFFFF;
     font-size:1.1rem;
-  }
-    background:transparent;
-  }
-  .gallery-title{ text-align:center; margin-bottom:3rem; }
-  .gallery-title h2{ font-style:italic; color:#FFFFFF; }
-  .gallery{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(210px,1fr));
-    gap:2.6rem 2.2rem;
-    padding-top:1rem;
   }
   .polaroid{
     background:#FFFDF8;
@@ -298,11 +298,11 @@
     </div>
     <div class="gallery" id="gallery"></div>
     <figure class="feature-photo">
-  <div class="frame">
-    <img src="photos/us.jpg" alt="Us together">
-  </div>
-  <figcaption>Just us ❤</figcaption>
-</figure>
+      <div class="frame">
+        <img src="photos/us.jpg" alt="Us together" loading="lazy">
+      </div>
+      <figcaption>Just us ❤</figcaption>
+    </figure>
   </section>
 </div>
 
@@ -328,7 +328,7 @@
 <script>
 /* ================= Photo gallery ================= */
 const gallery = document.getElementById('gallery');
-const TOTAL_PHOTOS = 24; // set to your real photo count (15-20)
+const TOTAL_PHOTOS = 24; // set to your real photo count (20-25)
 const rotations = [-4,3,-2,5,-5,2,-3,4,1,-4,3,-2,5,-1,4,-3,2,-5];
 
 for(let i=1;i<=TOTAL_PHOTOS;i++){
