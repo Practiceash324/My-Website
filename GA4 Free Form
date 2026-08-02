@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GA4 Free Form Lab — Advanced</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0D12; --panel:#12151C; --panel2:#171B24; --panel3:#1D2130; --line:#242938;
+  --ink:#EDEFF5; --sub:#8A90A3; --dim:#4d5266;
+  --blue:#4C8DFF; --blue-dim:#1E2A47;
+  --amber:#F5A623; --amber-dim:#3A2E14;
+  --green:#3DDC84; --green-dim:#123321;
+  --red:#FF5C5C; --red-dim:#3A1717;
+  --purple:#C77DFF;
+  --user:#4C8DFF; --session:#F5A623; --event:#3DDC84; --item:#C77DFF;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+.mono{font-family:'JetBrains Mono',monospace;}
+.wrap{max-width:1280px;margin:0 auto;padding:28px 24px 70px;}
+header p{color:var(--sub);font-size:14px;margin-top:6px;max-width:680px;line-height:1.55;}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+.eyebrow::before{content:'';width:6px;height:6px;background:var(--blue);border-radius:1px;}
+header h1{font-size:27px;font-weight:800;margin-top:8px;letter-spacing:-0.01em;}
+.scope-key{display:flex;gap:14px;margin-top:18px;flex-wrap:wrap;}
+.scope-key span{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--sub);font-family:'JetBrains Mono',monospace;}
+.scope-key i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+
+.tabs{display:flex;gap:8px;margin-top:24px;border-bottom:1px solid var(--line);}
+.tab{font-family:'JetBrains Mono',monospace;font-size:12.5px;padding:10px 16px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;font-weight:600;}
+.tab.active{color:var(--ink);border-color:var(--blue);}
+.view{display:none;}
+.view.active{display:block;}
+
+/* ===== EXPLORE VIEW ===== */
+.limits{font-size:11.5px;color:var(--dim);margin:14px 0 6px;font-family:'JetBrains Mono',monospace;}
+.board{display:grid;grid-template-columns:1fr;gap:16px;margin-top:14px;}
+@media(min-width:1040px){.board{grid-template-columns:1fr 1fr 0.9fr;}}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;max-height:560px;overflow-y:auto;}
+.col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;position:sticky;top:0;background:var(--panel);padding-bottom:6px;}
+.col-head h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);}
+.col-head .count{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--sub);background:var(--panel2);padding:2px 8px;border-radius:6px;}
+.chip-group{margin-bottom:13px;}
+.chip-group-label{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;font-family:'JetBrains Mono',monospace;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12px;padding:6px 10px;border-radius:7px;cursor:pointer;transition:all .12s ease;display:flex;align-items:center;gap:6px;}
+.chip:hover{border-color:#3a4258;}
+.chip .sw{width:7px;height:7px;border-radius:2px;flex:none;}
+.chip.selected{background:var(--blue-dim);border-color:var(--blue);color:#cfe0ff;}
+.chip.selected.sc-session{background:var(--amber-dim);border-color:var(--amber);color:#ffe3b3;}
+.chip.selected.sc-event{background:var(--green-dim);border-color:var(--green);color:#c8ffe1;}
+.chip.selected.sc-item{background:#2A1B3D;border-color:var(--item);color:#e6d1ff;}
+.chip.disabled{opacity:.35;cursor:not-allowed;}
+
+.selected-list{display:flex;flex-wrap:wrap;gap:8px;min-height:32px;margin-top:10px;}
+.tag{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:5px 9px;display:flex;align-items:center;gap:7px;}
+.tag button{background:none;border:none;color:var(--sub);cursor:pointer;font-size:13px;line-height:1;}
+.tag button:hover{color:var(--red);}
+.empty-hint{color:var(--dim);font-size:12px;font-style:italic;}
+.reset-btn{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--sub);background:none;border:1px solid var(--line);padding:6px 12px;border-radius:8px;cursor:pointer;margin-top:10px;}
+.reset-btn:hover{border-color:var(--red);color:var(--red);}
+
+.verdict{margin-top:20px;border-radius:14px;padding:20px;border:1px solid var(--line);background:var(--panel);}
+.verdict.valid{border-color:#1e4a33;background:linear-gradient(180deg,#0f1b14,#12151C);}
+.verdict.invalid{border-color:#4a1e1e;background:linear-gradient(180deg,#1b0f0f,#12151C);}
+.v-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.v-badge{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:6px;letter-spacing:.04em;}
+.v-badge.valid{background:var(--green-dim);color:var(--green);}
+.v-badge.invalid{background:var(--red-dim);color:var(--red);}
+.v-badge.partial{background:var(--amber-dim);color:var(--amber);}
+.v-title{font-size:14.5px;font-weight:700;}
+.pair-row{font-size:12.5px;color:#c4c8d4;padding:8px 0;border-top:1px solid var(--line);}
+.pair-row:first-child{border-top:none;}
+.pair-row b{color:var(--ink);}
+.v-insight{margin-top:14px;background:var(--panel2);border-radius:10px;padding:14px 16px;border-left:3px solid var(--blue);}
+.v-insight-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.v-insight p{font-size:12.5px;color:#d3d6e0;line-height:1.6;}
+
+/* ===== TEMPLATES VIEW ===== */
+.industry-nav{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 20px;}
+.ind-btn{font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--sub);cursor:pointer;}
+.ind-btn.active{background:var(--blue-dim);border-color:var(--blue);color:#cfe0ff;}
+.tpl-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+@media(min-width:760px){.tpl-grid{grid-template-columns:1fr 1fr;}}
+.tpl-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:border-color .12s ease, transform .12s ease;}
+.tpl-card:hover{border-color:var(--blue);transform:translateY(-2px);}
+.tpl-tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;}
+.tpl-card h3{font-size:15px;font-weight:700;margin-top:8px;}
+.tpl-card p.q{font-size:12.5px;color:var(--sub);margin-top:6px;line-height:1.5;}
+.tpl-mini{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;}
+.tpl-mini span{font-size:10.5px;padding:3px 8px;border-radius:6px;background:var(--panel2);color:var(--sub);font-family:'JetBrains Mono',monospace;}
+
+.tpl-detail{margin-top:22px;border-radius:16px;border:1px solid var(--line);background:var(--panel);padding:24px;display:none;}
+.tpl-detail.open{display:block;}
+.tpl-detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+.tpl-detail-head h2{font-size:19px;font-weight:800;}
+.tpl-detail-head .industry-badge{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--blue);background:var(--blue-dim);padding:4px 10px;border-radius:6px;letter-spacing:.05em;text-transform:uppercase;}
+.tpl-close{background:none;border:1px solid var(--line);color:var(--sub);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;}
+.tpl-detail .q{color:var(--sub);font-size:13.5px;margin-top:8px;max-width:640px;line-height:1.6;}
+.tpl-blocks{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px;}
+@media(min-width:820px){.tpl-blocks{grid-template-columns:1fr 1fr 1fr;}}
+.tblock{background:var(--panel2);border-radius:10px;padding:14px;}
+.tblock h4{font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;font-family:'JetBrains Mono',monospace;margin-bottom:10px;}
+.tblock .item{font-size:12.5px;padding:5px 0;display:flex;align-items:center;gap:7px;}
+.tblock .item i{width:7px;height:7px;border-radius:2px;flex:none;}
+.tpl-outcome{margin-top:18px;background:linear-gradient(180deg,#0f1b14,#171B24);border:1px solid #1e4a33;border-radius:12px;padding:18px;border-left:3px solid var(--green);}
+.tpl-outcome h4{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.tpl-outcome p{font-size:13px;color:#d3d6e0;line-height:1.65;}
+.tpl-outcome ul{margin:10px 0 0 18px;font-size:12.5px;color:#c4c8d4;line-height:1.7;}
+.tpl-watch{margin-top:14px;background:var(--panel2);border-radius:10px;padding:14px;border-left:3px solid var(--amber);}
+.tpl-watch h4{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+.tpl-watch p{font-size:12.5px;color:#c4c8d4;line-height:1.6;}
+.tpl-cta{margin-top:16px;}
+.tpl-cta button{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--blue-dim);color:#cfe0ff;border:1px solid var(--blue);padding:9px 14px;border-radius:8px;cursor:pointer;}
+
+footer{margin-top:40px;font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;text-align:center;line-height:1.8;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">GA4 Concept Lab · Advanced</span>
+    <h1>Free Form Report Explorer</h1>
+    <p>Build reports from the full GA4 dimension/metric taxonomy and check scope compatibility live, or start from real industry report templates to see exactly what business outcome each combination produces.</p>
+    <div class="scope-key">
+      <span><i style="background:var(--user)"></i>User-scoped</span>
+      <span><i style="background:var(--session)"></i>Session-scoped</span>
+      <span><i style="background:var(--event)"></i>Event-scoped</span>
+      <span><i style="background:var(--item)"></i>Item-scoped</span>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="explore" onclick="switchTab('explore')">Explore Combinations</div>
+    <div class="tab" data-tab="templates" onclick="switchTab('templates')">Industry Report Templates</div>
+  </div>
+
+  <!-- EXPLORE VIEW -->
+  <div class="view active" id="view-explore">
+    <div class="limits">Pick up to 2 dimensions, up to 3 metrics, 1 segment.</div>
+    <div class="board">
+      <div class="col">
+        <div class="col-head"><h2>Dimensions</h2><span class="count" id="dimCount">0 / 2</span></div>
+        <div id="dimGroups"></div>
+      </div>
+      <div class="col">
+        <div class="col-head"><h2>Metrics</h2><span class="count" id="metCount">0 / 3</span></div>
+        <div id="metGroups"></div>
+      </div>
+      <div class="col">
+        <div class="col-head"><h2>Segment / Comparison</h2><span class="count" id="segCount">0 / 1</span></div>
+        <div id="segGroups"></div>
+        <div class="chip-group-label" style="margin-top:16px;">Current report</div>
+        <div class="selected-list" id="selectedList"></div>
+        <button class="reset-btn" onclick="resetAll()">Reset selection</button>
+      </div>
+    </div>
+
+    <div class="verdict" id="verdict">
+      <div class="v-title">Build a report to see the verdict</div>
+      <div class="v-body" style="margin-top:8px;color:var(--sub);font-size:13px;">Select at least one dimension and one metric. The tool checks scope compatibility per pair and explains the direction of aggregation.</div>
+    </div>
+  </div>
+
+  <!-- TEMPLATES VIEW -->
+  <div class="view" id="view-templates">
+    <div class="industry-nav" id="industryNav"></div>
+    <div class="tpl-grid" id="tplGrid"></div>
+    <div class="tpl-detail" id="tplDetail"></div>
+  </div>
+
+  <footer>
+    Simplified for teaching — mirrors GA4 scope rules and real-world reporting patterns, not a live GA4 API connection.<br>
+    Field list curated from support.google.com/analytics/table/13948007 — ad-platform-linkage dimensions (CM360/DV360/SA360) omitted as out-of-scope for core training.
+  </footer>
+</div>
+
+<script>
+const SCOPE_COLOR = {user:'var(--user)', session:'var(--session)', event:'var(--event)', item:'var(--item)'};
+const SCOPE_CLASS = {user:'sc-user', session:'sc-session', event:'sc-event', item:'sc-item'};
+const SCOPE_ORDER = {user:0, session:1, event:2, item:3};
+
+/* ============ FULL DIMENSION TAXONOMY ============ */
+const DIMENSIONS = [
+  {group:'Traffic source / Attribution', items:[
+    {id:'d_channelGroup', name:'Session default channel group', scope:'session'},
+    {id:'d_firstChannelGroup', name:'First user default channel group', scope:'user'},
+    {id:'d_sourceMedium', name:'Session source / medium', scope:'session'},
+    {id:'d_firstSourceMedium', name:'First user source / medium', scope:'user'},
+    {id:'d_campaign', name:'Session campaign', scope:'session'},
+    {id:'d_googleAdsCampaign', name:'Google Ads campaign', scope:'session'},
+    {id:'d_googleAdsKeyword', name:'Google Ads keyword text', scope:'session'},
+  ]},
+  {group:'Demographics', items:[
+    {id:'d_country', name:'Country', scope:'user'},
+    {id:'d_region', name:'Region', scope:'user'},
+    {id:'d_city', name:'City', scope:'user'},
+    {id:'d_age', name:'Age', scope:'user'},
+    {id:'d_gender', name:'Gender', scope:'user'},
+    {id:'d_interest', name:'Interest category', scope:'user'},
+    {id:'d_language', name:'Language', scope:'user'},
+  ]},
+  {group:'Page / Screen', items:[
+    {id:'d_pagePath', name:'Page path + query string', scope:'event'},
+    {id:'d_pageTitle', name:'Page title', scope:'event'},
+    {id:'d_landingPage', name:'Landing page + query string', scope:'session'},
+    {id:'d_contentGroup', name:'Content group', scope:'event'},
+    {id:'d_screenName', name:'Screen name', scope:'event'},
+  ]},
+  {group:'Event', items:[
+    {id:'d_eventName', name:'Event name', scope:'event'},
+    {id:'d_linkUrl', name:'Link URL (outbound click)', scope:'event'},
+    {id:'d_linkText', name:'Link text', scope:'event'},
+    {id:'d_videoTitle', name:'Video title', scope:'event'},
+    {id:'d_formId', name:'Form ID', scope:'event'},
+  ]},
+  {group:'Platform / Device', items:[
+    {id:'d_deviceCategory', name:'Device category', scope:'user'},
+    {id:'d_platform', name:'Platform', scope:'user'},
+    {id:'d_operatingSystem', name:'Operating system', scope:'user'},
+    {id:'d_browser', name:'Browser', scope:'user'},
+  ]},
+  {group:'User', items:[
+    {id:'d_newVsReturning', name:'New vs returning', scope:'user'},
+    {id:'d_audienceName', name:'Audience name', scope:'user'},
+    {id:'d_signupMethod', name:'Sign-up method', scope:'user'},
+  ]},
+  {group:'Time', items:[
+    {id:'d_date', name:'Date', scope:'session'},
+    {id:'d_dayOfWeek', name:'Day of week', scope:'session'},
+    {id:'d_hour', name:'Hour', scope:'session'},
+    {id:'d_month', name:'Month', scope:'session'},
+  ]},
+  {group:'Ecommerce (item)', items:[
+    {id:'d_itemName', name:'Item name', scope:'item'},
+    {id:'d_itemCategory', name:'Item category', scope:'item'},
+    {id:'d_itemBrand', name:'Item brand', scope:'item'},
+    {id:'d_transactionId', name:'Transaction ID', scope:'event'},
+    {id:'d_couponName', name:'Coupon', scope:'item'},
+    {id:'d_paymentType', name:'Payment type', scope:'event'},
+  ]},
+];
+
+const METRICS = [
+  {group:'User', items:[
+    {id:'m_totalUsers', name:'Total users', scope:'user'},
+    {id:'m_newUsers', name:'New users', scope:'user'},
+    {id:'m_activeUsers', name:'Active users', scope:'user'},
+  ]},
+  {group:'Session', items:[
+    {id:'m_sessions', name:'Sessions', scope:'session'},
+    {id:'m_engagedSessions', name:'Engaged sessions', scope:'session'},
+    {id:'m_engagementRate', name:'Engagement rate', scope:'session'},
+    {id:'m_avgEngagementTime', name:'Average engagement time', scope:'session'},
+    {id:'m_bounceRate', name:'Bounce rate', scope:'session'},
+  ]},
+  {group:'Event', items:[
+    {id:'m_eventCount', name:'Event count', scope:'event'},
+    {id:'m_eventCountPerUser', name:'Event count per user', scope:'event'},
+    {id:'m_conversions', name:'Conversions (key events)', scope:'event'},
+    {id:'m_views', name:'Views (page / screen)', scope:'event'},
+    {id:'m_formSubmits', name:'Form submits', scope:'event'},
+  ]},
+  {group:'Ecommerce / Revenue', items:[
+    {id:'m_itemRevenue', name:'Item revenue', scope:'item'},
+    {id:'m_itemsPurchased', name:'Items purchased', scope:'item'},
+    {id:'m_itemsViewed', name:'Items viewed', scope:'item'},
+    {id:'m_cartToViewRate', name:'Cart-to-view rate', scope:'item'},
+    {id:'m_purchaseRevenue', name:'Purchase revenue', scope:'event'},
+    {id:'m_totalRevenue', name:'Total revenue', scope:'event'},
+    {id:'m_ecommercePurchases', name:'Ecommerce purchases', scope:'event'},
+  ]},
+  {group:'Advertising', items:[
+    {id:'m_adCost', name:'Advertising cost', scope:'session'},
+    {id:'m_roas', name:'Return on ad spend (ROAS)', scope:'session'},
+    {id:'m_costPerConversion', name:'Cost per key event', scope:'session'},
+  ]},
+  {group:'Search Console', items:[
+    {id:'m_gscClicks', name:'Organic clicks (GSC)', scope:'session'},
+    {id:'m_gscImpressions', name:'Organic impressions (GSC)', scope:'session'},
+    {id:'m_gscCtr', name:'Organic CTR (GSC)', scope:'session'},
+    {id:'m_gscPosition', name:'Average position (GSC)', scope:'session'},
+  ]},
+  {group:'User lifetime', items:[
+    {id:'m_ltv', name:'Lifetime value (LTV)', scope:'user'},
+  ]},
+];
+
+const SEGMENTS = [
+  {group:'Comparisons', items:[
+    {id:'s_paid', name:'Paid traffic only', scope:'session'},
+    {id:'s_organic', name:'Organic search only', scope:'session'},
+    {id:'s_mobile', name:'Mobile device users', scope:'user'},
+    {id:'s_newUsers', name:'New users only', scope:'user'},
+    {id:'s_purchasers', name:'Users who purchased / converted', scope:'user'},
+    {id:'s_returning', name:'Returning visitors', scope:'user'},
+  ]},
+];
+
+const dimMap={}, metMap={}, segMap={};
+DIMENSIONS.forEach(g=>g.items.forEach(i=>dimMap[i.id]=i));
+METRICS.forEach(g=>g.items.forEach(i=>metMap[i.id]=i));
+SEGMENTS.forEach(g=>g.items.forEach(i=>segMap[i.id]=i));
+
+const LIMITS = {dim:2, met:3, seg:1};
+let selDims=[], selMets=[], selSegs=[];
+
+function toggle(arr, id, limit){
+  const idx = arr.indexOf(id);
+  if(idx>-1){ arr.splice(idx,1); return arr; }
+  if(arr.length>=limit) arr.shift();
+  arr.push(id);
+  return arr;
+}
+function pickDim(id){ selDims = toggle(selDims, id, LIMITS.dim); render(); }
+function pickMet(id){ selMets = toggle(selMets, id, LIMITS.met); render(); }
+function pickSeg(id){ selSegs = toggle(selSegs, id, LIMITS.seg); render(); }
+function resetAll(){ selDims=[]; selMets=[]; selSegs=[]; render(); }
+
+function renderChips(containerId, groups, selArr, onClick){
+  const el = document.getElementById(containerId);
+  el.innerHTML='';
+  groups.forEach(g=>{
+    const wrap = document.createElement('div'); wrap.className='chip-group';
+    const label = document.createElement('div'); label.className='chip-group-label'; label.textContent=g.group;
+    wrap.appendChild(label);
+    const chips = document.createElement('div'); chips.className='chips';
+    g.items.forEach(item=>{
+      const isSel = selArr.indexOf(item.id)>-1;
+      const c = document.createElement('div');
+      c.className='chip'+(isSel?' selected '+SCOPE_CLASS[item.scope]:'');
+      c.innerHTML = '<span class="sw" style="background:'+SCOPE_COLOR[item.scope]+'"></span>'+item.name;
+      c.onclick = ()=>onClick(item.id);
+      chips.appendChild(c);
+    });
+    wrap.appendChild(chips);
+    el.appendChild(wrap);
+  });
+}
+
+function pairVerdict(dim, met){
+  if(dim.scope === met.scope){
+    return {level:'valid', note:'Same scope ('+dim.scope+') — each row means exactly what it looks like. Direct, reliable match.'};
+  }
+  const dimIsItem = dim.scope==='item', metIsItem = met.scope==='item';
+  if(dimIsItem !== metIsItem){
+    return {level:'invalid', note:'Item-scoped and non-item-scoped mixed — an event can carry multiple items in an array, so this can inflate or misrepresent the number. Avoid pairing item dimensions with session/user/event metrics directly.'};
+  }
+  if(SCOPE_ORDER[dim.scope] < SCOPE_ORDER[met.scope]){
+    return {level:'valid', note:'Metric is finer-grained than the dimension — GA4 aggregates it up into each '+dim.scope+' bucket. Standard, reliable rollup.'};
+  }
+  return {level:'partial', note:'Metric is broader-grained than the dimension ('+met.scope+' vs '+dim.scope+') — the same value can repeat across multiple rows. Do not sum this column across rows or you will double count.'};
+}
+
+function render(){
+  renderChips('dimGroups', DIMENSIONS, selDims, pickDim);
+  renderChips('metGroups', METRICS, selMets, pickMet);
+  renderChips('segGroups', SEGMENTS, selSegs, pickSeg);
+  document.getElementById('dimCount').textContent = selDims.length+' / '+LIMITS.dim;
+  document.getElementById('metCount').textContent = selMets.length+' / '+LIMITS.met;
+  document.getElementById('segCount').textContent = selSegs.length+' / '+LIMITS.seg;
+
+  const list = document.getElementById('selectedList');
+  list.innerHTML='';
+  const all = [
+    ...selDims.map(id=>({label:dimMap[id].name, clear:()=>{selDims=selDims.filter(x=>x!==id);render();}})),
+    ...selMets.map(id=>({label:metMap[id].name, clear:()=>{selMets=selMets.filter(x=>x!==id);render();}})),
+    ...selSegs.map(id=>({label:segMap[id].name, clear:()=>{selSegs=selSegs.filter(x=>x!==id);render();}})),
+  ];
+  if(all.length===0){ list.innerHTML='<span class="empty-hint">Nothing selected — pick a dimension and metric.</span>'; }
+  else all.forEach(t=>{
+    const tag=document.createElement('span'); tag.className='tag';
+    tag.innerHTML=t.label+' <button>×</button>';
+    tag.querySelector('button').onclick=t.clear;
+    list.appendChild(tag);
+  });
+
+  const v = document.getElementById('verdict');
+  if(selDims.length===0 || selMets.length===0){
+    v.className='verdict';
+    v.innerHTML='<div class="v-title">Build a report to see the verdict</div><div style="margin-top:8px;color:var(--sub);font-size:13px;">Select at least one dimension and one metric. The tool checks scope compatibility per pair and explains the direction of aggregation.</div>';
+    return;
+  }
+  const pairs=[];
+  selDims.forEach(dId=>selMets.forEach(mId=>{
+    pairs.push({dim:dimMap[dId], met:metMap[mId], v:pairVerdict(dimMap[dId], metMap[mId])});
+  }));
+  const worst = pairs.some(p=>p.v.level==='invalid') ? 'invalid' : pairs.some(p=>p.v.level==='partial') ? 'partial' : 'valid';
+  v.className = 'verdict '+(worst==='invalid'?'invalid':worst==='valid'?'valid':'');
+  const badgeText = worst==='valid'?'✓ VALID':worst==='invalid'?'✕ SCOPE MISMATCH':'△ PARTIAL / CAUTION';
+  let html = '<div class="v-head"><span class="v-badge '+worst+'">'+badgeText+'</span><span class="v-title">'+pairs.length+' dimension × metric pair'+(pairs.length>1?'s':'')+' checked</span></div>';
+  pairs.forEach(p=>{ html += '<div class="pair-row"><b>'+p.dim.name+'</b> × <b>'+p.met.name+'</b><br>'+p.v.note+'</div>'; });
+  if(selSegs.length){
+    html += '<div class="v-insight"><div class="v-insight-label">Segment applied</div><p>'+segMap[selSegs[0]].name+' — the whole report above now reflects only this slice of users/sessions. Great for before/after or side-by-side comparisons in Explore.</p></div>';
+  }
+  v.innerHTML = html;
+}
+
+/* ============ INDUSTRY TEMPLATES ============ */
+const TEMPLATES = [
+  {industry:'Education', title:'Course landing page → enrollment funnel', q:'Which traffic source brings visitors who actually enroll, not just browse?',
+   dims:['d_firstSourceMedium','d_landingPage'], mets:['m_sessions','m_formSubmits','m_conversions'], seg:'s_purchasers',
+   outcome:'Ranks each acquisition source by real enrollments, not just clicks. A source with high sessions but low form submits is generating cheap traffic that never converts — good to identify before scaling ad spend on it.',
+   watch:'Form submits (event-scoped) rolling up under first-user source/medium (user-scoped) is valid but reflects lifetime attribution, not just this session — a student may have first arrived weeks ago via one channel and enrolled later via another.'},
+  {industry:'Education', title:'Video lecture engagement by course topic', q:'Which lecture topics do students actually finish watching?',
+   dims:['d_videoTitle','d_contentGroup'], mets:['m_eventCount','m_avgEngagementTime'], seg:null,
+   outcome:'Surfaces which topics hold attention and which get abandoned early. Low engagement time on a specific video, despite high view count, usually means pacing or clarity issues in that specific lecture — actionable for content revision.',
+   watch:'Average engagement time is session-scoped rolling under an event-scoped dimension (video title) — the number can repeat across multiple video rows watched in the same session. Read per-video totals with that in mind, don\'t sum blindly.'},
+  {industry:'Real Estate', title:'Property listing page performance', q:'Which property listings generate genuine buyer interest vs just page views?',
+   dims:['d_pagePath','d_landingPage'], mets:['m_views','m_engagedSessions','m_formSubmits'], seg:'s_organic',
+   outcome:'Compares raw views against actual inquiry form submits per listing page — separates "popular to browse" from "popular to actually contact about." A property with high views but zero form submits usually has a pricing or photo problem, not a visibility problem.',
+   watch:'Form submits and views are both event-scoped so this is a clean, reliable comparison — no rollup caution needed here.'},
+  {industry:'Real Estate', title:'Location-based lead quality', q:'Which cities/regions produce the most qualified leads for a given property type?',
+   dims:['d_region','d_city'], mets:['m_totalUsers','m_conversions'], seg:'s_newUsers',
+   outcome:'Maps lead generation geographically — useful for deciding where to run local ad campaigns or open a new branch office. High users + low conversions in a region signals wrong targeting or wrong property mix for that market.',
+   watch:'Both dimensions and the conversions metric roll up cleanly to user scope — safe combination, good for a first geographic report.'},
+  {industry:'Gym / Fitness', title:'Membership page → trial signup path', q:'Which channel brings people who actually book a free trial class?',
+   dims:['d_channelGroup'], mets:['m_sessions','m_conversions','m_costPerConversion'], seg:'s_paid',
+   outcome:'Shows cost-per-trial-signup by channel — critical for a gym\'s ad budget decisions. A channel with low cost-per-conversion here is where to shift more spend; one with cheap sessions but expensive conversions is burning budget on the wrong audience.',
+   watch:'Session-scoped dimension with event-scoped conversions metric is a standard, reliable pairing — this is the most common real-world GA4 report structure.'},
+  {industry:'Gym / Fitness', title:'Class page engagement by device', q:'Are mobile users dropping off before completing class booking?',
+   dims:['d_deviceCategory','d_pagePath'], mets:['m_engagementRate','m_formSubmits'], seg:'s_mobile',
+   outcome:'Flags device-specific friction. If mobile shows strong page engagement but low form submits compared to desktop, the booking form itself likely has a mobile UX problem — too many fields, small tap targets, etc.',
+   watch:'Device category is user-scoped, page path is event-scoped — mixing them means engagement rate (session-scoped) rolls up under the finer event-scoped page dimension with some repetition across rows in the same session; read totals per unique session, not summed blindly.'},
+  {industry:'Doctors / Clinics', title:'Appointment booking funnel by source', q:'Which channel brings patients who actually book an appointment vs just read content?',
+   dims:['d_sourceMedium'], mets:['m_sessions','m_formSubmits','m_conversions'], seg:'s_organic',
+   outcome:'Separates informational traffic (symptom searches, blog reads) from booking-intent traffic. A clinic often sees huge organic sessions from health content but very few bookings from that same source — this report proves it and justifies budget toward direct/branded search instead.',
+   watch:'Clean pairing — session-scoped dimension with event-scoped conversion metrics, no rollup ambiguity.'},
+  {industry:'Doctors / Clinics', title:'Service page interest by demographic', q:'Which age group is most interested in which service/specialty?',
+   dims:['d_age','d_contentGroup'], mets:['m_totalUsers','m_views'], seg:null,
+   outcome:'Useful for planning which specialties to feature in ads targeted at specific age brackets — e.g. if 45+ users concentrate heavily on a cardiology content group, that\'s where to allocate that audience\'s ad spend.',
+   watch:'Age (user-scoped) with views (event-scoped) is a valid, common rollup — one user\'s views across multiple pages get properly bucketed by their age group.'},
+  {industry:'E-commerce', title:'Product performance leaderboard', q:'Which products actually generate revenue, not just traffic?',
+   dims:['d_itemName','d_itemCategory'], mets:['m_itemsViewed','m_itemsPurchased','m_itemRevenue'], seg:null,
+   outcome:'Standard product-level revenue report. High views + low purchases on a specific item usually signals a pricing, description, or image problem on that product page specifically — actionable per-SKU, not just site-wide.',
+   watch:'All item-scoped dimensions and metrics together — this is the one combination where item scope is fully consistent throughout, no mismatch risk at all.'},
+  {industry:'E-commerce', title:'Channel → revenue attribution', q:'Which marketing channel drives the most actual revenue, not just sessions?',
+   dims:['d_channelGroup'], mets:['m_sessions','m_ecommercePurchases','m_totalRevenue','m_roas'], seg:'s_paid',
+   outcome:'Direct budget-allocation report — ranks channels by revenue generated and ROAS, not vanity session counts. A channel with the most sessions is frequently NOT the one with the best ROAS; this report is what actually should drive next month\'s ad budget split.',
+   watch:'Session-scoped dimension with event-scoped revenue metrics is standard and reliable — this is the report every ecommerce student should be able to build from memory.'},
+  {industry:'E-commerce', title:'Cart abandonment by item', q:'Which specific products get added to cart but never bought?',
+   dims:['d_itemName'], mets:['m_itemsViewed','m_cartToViewRate'], seg:null,
+   outcome:'Isolates products with a weak cart-to-view rate — meaning people see it, consider it, but bail before purchase. Points to price shock, shipping cost surprise, or stock/size issues on that exact SKU.',
+   watch:'Both item-scoped — clean, no caution needed.'},
+  {industry:'SaaS / Software', title:'Free trial → paid signup path', q:'Which acquisition source produces trial users who convert to paying customers?',
+   dims:['d_firstChannelGroup'], mets:['m_newUsers','m_conversions','m_ltv'], seg:'s_purchasers',
+   outcome:'Connects acquisition channel all the way to lifetime value, not just signup volume — the channel bringing the most trial signups is often not the one bringing the highest-LTV customers. This report is what justifies premium channel spend even when its cost-per-signup looks worse on paper.',
+   watch:'First user channel group is user-scoped; LTV is also user-scoped — consistent scope, reliable. Conversions (event-scoped) rolling up to user-scoped dimension is standard.'},
+  {industry:'Local Retail / Restaurant', title:'Location page → directions/call clicks', q:'Which location page drives the most real-world visit intent?',
+   dims:['d_pagePath'], mets:['m_views','m_eventCount'], seg:null,
+   outcome:'For multi-location businesses: compares page views against "get directions" / "call now" click events per location page. High views with low direction-clicks on one location suggests that page\'s address/hours/photos need work compared to better-performing locations.',
+   watch:'Both event-scoped — safe, direct comparison across location pages.'},
+];
+
+const INDUSTRIES = ['All', ...Array.from(new Set(TEMPLATES.map(t=>t.industry)))];
+let activeIndustry='All';
+
+function renderIndustryNav(){
+  const nav = document.getElementById('industryNav');
+  nav.innerHTML='';
+  INDUSTRIES.forEach(ind=>{
+    const b=document.createElement('div');
+    b.className='ind-btn'+(ind===activeIndustry?' active':'');
+    b.textContent=ind;
+    b.onclick=()=>{ activeIndustry=ind; renderIndustryNav(); renderTemplates(); };
+    nav.appendChild(b);
+  });
+}
+
+function renderTemplates(){
+  const grid = document.getElementById('tplGrid');
+  grid.innerHTML='';
+  const list = activeIndustry==='All' ? TEMPLATES : TEMPLATES.filter(t=>t.industry===activeIndustry);
+  list.forEach((t)=>{
+    const idx = TEMPLATES.indexOf(t);
+    const card = document.createElement('div'); card.className='tpl-card';
+    const mini = [...t.dims.map(id=>dimMap[id].name), ...t.mets.map(id=>metMap[id].name)];
+    card.innerHTML = '<div class="tpl-tag">'+t.industry+'</div><h3>'+t.title+'</h3><p class="q">'+t.q+'</p><div class="tpl-mini">'+mini.map(m=>'<span>'+m+'</span>').join('')+'</div>';
+    card.onclick=()=>openTemplate(idx);
+    grid.appendChild(card);
+  });
+}
+
+function scopeDot(scope){ return '<i style="background:'+SCOPE_COLOR[scope]+'"></i>'; }
+
+function openTemplate(idx){
+  const t = TEMPLATES[idx];
+  const detail = document.getElementById('tplDetail');
+  detail.classList.add('open');
+  const dimsHtml = t.dims.map(id=>'<div class="item">'+scopeDot(dimMap[id].scope)+dimMap[id].name+'</div>').join('');
+  const metsHtml = t.mets.map(id=>'<div class="item">'+scopeDot(metMap[id].scope)+metMap[id].name+'</div>').join('');
+  const segHtml = t.seg ? '<div class="item">'+scopeDot(segMap[t.seg].scope)+segMap[t.seg].name+'</div>' : '<div class="item" style="color:var(--dim);">No segment — full user base</div>';
+  detail.innerHTML = `
+    <div class="tpl-detail-head">
+      <div>
+        <span class="industry-badge">${t.industry}</span>
+        <h2 style="margin-top:8px;">${t.title}</h2>
+        <p class="q">${t.q}</p>
+      </div>
+      <button class="tpl-close" onclick="closeTemplate()">Close ×</button>
+    </div>
+    <div class="tpl-blocks">
+      <div class="tblock"><h4>Dimensions</h4>${dimsHtml}</div>
+      <div class="tblock"><h4>Metrics</h4>${metsHtml}</div>
+      <div class="tblock"><h4>Segment</h4>${segHtml}</div>
+    </div>
+    <div class="tpl-outcome"><h4>What this report actually tells you</h4><p>${t.outcome}</p></div>
+    <div class="tpl-watch"><h4>Scope note</h4><p>${t.watch}</p></div>
+    <div class="tpl-cta"><button onclick="loadIntoExplorer(${idx})">Load into Explore Combinations →</button></div>
+  `;
+  detail.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function closeTemplate(){ document.getElementById('tplDetail').classList.remove('open'); }
+function loadIntoExplorer(idx){
+  const t = TEMPLATES[idx];
+  selDims = t.dims.slice(0, LIMITS.dim);
+  selMets = t.mets.slice(0, LIMITS.met);
+  selSegs = t.seg ? [t.seg] : [];
+  switchTab('explore');
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active', el.dataset.tab===name));
+  document.getElementById('view-explore').classList.toggle('active', name==='explore');
+  document.getElementById('view-templates').classList.toggle('active', name==='templates');
+}
+
+renderIndustryNav();
+renderTemplates();
+render();
+</script>
+</body>
+</html>
